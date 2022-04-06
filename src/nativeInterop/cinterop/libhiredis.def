@@ -1,0 +1,6 @@
+headers = hiredis/hiredis.h
+
+compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
+compilerOpts.osx = -I/usr/local/Cellar/hiredis/1.0.2/include/
+linkerOpts.osx = -L/usr/local/Cellar/hiredis/1.0.2/lib -lhiredis
+linkerOpts.linux = -L/usr/lib -L/usr/lib/x86_64-linux-gnu -lhiredis
