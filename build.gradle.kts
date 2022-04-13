@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.github.versi.kredis"
-version = "0.0.2"
+version = "0.0.3"
 
 repositories {
     mavenCentral()
@@ -45,9 +45,9 @@ kotlin {
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
     val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        isMingwX64 -> mingwX64("native")
+        hostOs == "Mac OS X" -> macosX64()
+        hostOs == "Linux" -> linuxX64()
+        isMingwX64 -> mingwX64()
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
@@ -75,11 +75,32 @@ kotlin {
         val jvmTest by getting
         val jsMain by getting
         val jsTest by getting
-        val nativeMain by getting {
+        val desktopMain by creating {
+            dependsOn(commonMain)
             dependencies {
                 implementation("org.jetbrains.kotlinx:atomicfu:0.16.3")
             }
         }
-        val nativeTest by getting
+        val desktopTest by creating {
+            dependsOn(desktopMain)
+        }
+        when {
+            hostOs == "Mac OS X" -> {
+                val macosX64Main by getting {
+                    dependsOn(desktopMain)
+                }
+            }
+            hostOs == "Linux" -> {
+                val linuxX64Main by getting {
+                    dependsOn(desktopMain)
+                }
+            }
+            isMingwX64 -> {
+                val mingwX64Main by getting {
+                    dependsOn(desktopMain)
+                }
+            }
+            else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+        }
     }
 }
