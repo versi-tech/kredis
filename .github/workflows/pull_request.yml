@@ -1,0 +1,24 @@
+name: Pull Request Build
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.adoc'
+      - '**/.gitignore'
+      - './github/**'
+      - '!./github/workflow/test.yml'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  Build-KRedis:
+    container:
+      image: ghcr.io/versi-tech/arch-linux-libs
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Build
+        run: ./gradlew build
+        shell: bash
