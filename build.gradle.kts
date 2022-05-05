@@ -1,10 +1,10 @@
 plugins {
-    kotlin("multiplatform") version "1.6.20"
+    kotlin("multiplatform") version "1.6.21"
     id("maven-publish")
 }
 
 group = "io.github.versi.kredis"
-version = "0.0.3"
+version = "0.0.4"
 
 repositories {
     mavenCentral()
@@ -78,7 +78,7 @@ kotlin {
         val desktopMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("org.jetbrains.kotlinx:atomicfu:0.16.3")
+                implementation("org.jetbrains.kotlinx:atomicfu:0.17.1")
             }
         }
         val desktopTest by creating {
