@@ -1,16 +1,18 @@
 package io.github.versi.kredis
 
+import io.github.versi.kredis.command.*
 import io.github.versi.kredis.command.KGetBytesCommand
 import io.github.versi.kredis.command.KGetStringCommand
-import io.github.versi.kredis.command.KSetBytesCommand
-import io.github.versi.kredis.command.KSetStringCommand
-import io.github.versi.kredis.hiredis.*
 import io.github.versi.kredis.command.KRedisAuthCommand
 import io.github.versi.kredis.command.KRedisDeleteCommand
 import io.github.versi.kredis.command.KRedisFlushCommand
+import io.github.versi.kredis.command.KSetBytesCommand
+import io.github.versi.kredis.command.KSetStringCommand
+import io.github.versi.kredis.hiredis.*
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.get
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKStringFromUtf8
 
@@ -25,6 +27,8 @@ interface KRedis {
     suspend fun setBytes(key: String, value: ByteArray, timeToLive: Long?)
 
     suspend fun delete(key: String): Boolean
+
+    suspend fun getKeys(filterPattern: String = "*"): List<String>
 
     suspend fun flush()
 
@@ -76,6 +80,10 @@ internal class KRedisCache(private val address: String, private val port: Int, p
 
     override suspend fun delete(key: String): Boolean {
         return runCommand(KRedisDeleteCommand(key))
+    }
+
+    override suspend fun getKeys(filterPattern: String): List<String> {
+        return runCommand(KRedisKeysCommand(filterPattern))
     }
 
     override suspend fun flush() {
@@ -149,6 +157,17 @@ internal fun CPointer<redisReply>.getString(): String {
 
 internal fun CPointer<redisReply>.getBoolean(): Boolean {
     return pointed.integer.toInt() == 1
+}
+
+internal fun CPointer<redisReply>.getStringElements(): List<String> {
+    val elementsCount = pointed.elements.toInt()
+    val stringElements = mutableListOf<String>()
+    for (i in 0 until elementsCount) {
+        pointed.element?.get(i)?.getString()?.let {
+            stringElements.add(it)
+        }
+    }
+    return stringElements
 }
 
 class KRedisException(operationName: String, errorMessage: String) :

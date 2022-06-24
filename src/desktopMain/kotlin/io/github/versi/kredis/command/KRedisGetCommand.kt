@@ -1,33 +1,11 @@
 package io.github.versi.kredis.command
 
-import io.github.versi.kredis.KRedisCommand
 import io.github.versi.kredis.getString
 import io.github.versi.kredis.hiredis.*
-import io.github.versi.kredis.validateError
 import kotlinx.cinterop.*
 
-internal abstract class KRedisGetCommand<T> : KRedisCommand<T> {
-
-    abstract val key: String
-
-    override fun run(context: CPointer<redisContext>?): T {
-        var redisReply: COpaquePointer? = null
-        try {
-            redisReply = redisCommand(context, "GET %s", key)
-            val reply = redisReply?.reinterpret<redisReply>()
-            reply?.validateError(name)
-            return getReturnValue(reply)
-        } finally {
-            redisReply?.let {
-                freeReplyObject(redisReply)
-            }
-        }
-    }
-
-    abstract fun getReturnValue(redisReply: CPointer<redisReply>?): T
-}
-
-internal class KGetStringCommand(override val key: String) : KRedisGetCommand<String>() {
+internal abstract class KRedisGetCommand<T>(key: String) : KRedisRetrieveCommand<T>(command = "GET %s", arg = key)
+internal class KGetStringCommand(key: String) : KRedisGetCommand<String>(key) {
 
     override fun getReturnValue(redisReply: CPointer<redisReply>?): String {
         return redisReply?.getString().orEmpty()
@@ -36,7 +14,7 @@ internal class KGetStringCommand(override val key: String) : KRedisGetCommand<St
     override val name = "get String"
 }
 
-internal class KGetBytesCommand(override val key: String) : KRedisGetCommand<ByteArray?>() {
+internal class KGetBytesCommand(key: String) : KRedisGetCommand<ByteArray?>(key) {
 
     override val name = "get bytes"
 

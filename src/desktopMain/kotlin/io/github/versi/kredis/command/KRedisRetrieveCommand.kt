@@ -10,19 +10,24 @@ import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.reinterpret
 
-internal class KRedisFlushCommand : KRedisCommand<Unit> {
+internal abstract class KRedisRetrieveCommand<T>(private val command: String, private val arg: String? = null) :
+    KRedisCommand<T> {
 
-    override val name = "flush"
-    override fun run(context: CPointer<redisContext>?) {
+    override fun run(context: CPointer<redisContext>?): T {
         var redisReply: COpaquePointer? = null
         try {
-            redisReply = redisCommand(context, "FLUSHDB")
+            redisReply = arg?.let {
+                redisCommand(context, command, it)
+            } ?: redisCommand(context, command)
             val reply = redisReply?.reinterpret<redisReply>()
             reply?.validateError(name)
+            return getReturnValue(reply)
         } finally {
             redisReply?.let {
                 freeReplyObject(redisReply)
             }
         }
     }
+
+    abstract fun getReturnValue(redisReply: CPointer<redisReply>?): T
 }
