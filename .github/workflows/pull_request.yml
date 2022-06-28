@@ -16,12 +16,13 @@ permissions:
 
 jobs:
   Build-KRedis:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/versi-tech/arch-linux-libs
+    runs-on: bullseye
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
+      - name: Instal hiredis
+        run: apt update && apt --assume-yes install libhiredis-dev
+        shell: bash
       - name: Build
         run: ./gradlew build
         shell: bash
